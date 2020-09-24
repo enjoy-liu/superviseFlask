@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>月度信息</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../static/admin/layui/css/layui.css" media="all">
+    <!-- 注意：本地文件路径 -->
+	<style>
+		.layui-table-cell {
+    	   height:36px;
+    	   line-height: 36px;
+		}
+	</style>
+</head>
+<body>
+	<blockquote class="layui-elem-quote news_search">
+		<div class="layui-row">
+			<form class="layui-form layui-col-md12 x-so" id="complain_search">
+				用户ID:
+				<div class="layui-input-inline">
+					<input type="text" name="user_id" id="user_id"
+						placeholder="请输入用户ID" autocomplete="off" class="layui-input">
+				</div>
+				合同号:
+				<div class="layui-input-inline">
+					<input type="text" name="acct_no" id="acct_no"
+						placeholder="请输入合同号" autocomplete="off" class="layui-input">
+				</div>
+				<button id="search" class="layui-btn" lay-submit
+					lay-filter="provinceSearch">
+					<i class="layui-icon">&#xe615;</i>
+				</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+			</form>
+		</div>
+
+	</blockquote>
+<table class="layui-hide" id="test" lay-filter="demo2" ></table>
+
+
+<script src="../../static/admin/layui/layui.js" charset="utf-8"></script>
+
+<!-- 注意：本地文件路径 -->
+<!--<script type="text/html" id="barDemo" >-->
+
+  <!--<a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>-->
+    <!--&lt;!&ndash;<a class="layui-btn layui-btn-xs" lay-event="detail">查看</a>&ndash;&gt;-->
+  <!--&lt;!&ndash;<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>&ndash;&gt;-->
+<!--</script>-->
+
+<script>
+layui.use(['table','layer','form','laypage'], function(){
+	var table = layui.table,
+  		layer = layui.layer,
+  		form = layui.form,
+  		$ = layui.jquery,
+  		laypage = layui.laypage;
+
+  table.render({
+  	id:"provinceReload"
+    ,elem: '#test'
+    ,url:'/rh/mthly/data'       // 数据接口，后续讲解
+    ,cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+    ,height : 'full-100'
+	,toolbar:true
+	,defaultToolbar:['filter']
+    ,page: true
+    ,limit: 10
+    ,method:'post'
+    ,contentType: "application/json;charset=utf-8"
+	,request:{
+  		pageName: 'page',
+  		limitName: 'limit'
+  	}
+    ,cols: [[
+      {field:'cust_id', width:100, title: '用户ID', sort: true}
+      ,{field:'info_up_date', width:120, title: '业务发生日期'}
+      ,{field:'acct_no', width:160, title: '合同号'}
+      ,{field:'line_type', width:80, title: '业务类型', sort: true ,templet : function (d){
+            if(d.line_type == 0){
+            return '联名卡';
+            }else if(d.line_type == 4){
+            return '车友贷';
+            }else if(d.line_type == 10){
+            return '好运贷';
+            }else{
+            return d.line_type;}
+      }}
+      ,{field:'month', width:80, title: '月份', sort: true}
+      ,{field:'sett_date', title: '结算/应还款日', width: 120, sort: true} //minWidth：局部定义当前单元格的最小宽度，layui 2.2.1 新增
+      ,{field:'acct_status', title: '账户状态', width: 120, sort: true}
+      ,{field:'cur_rpy_amt', title: '本月应还款金额', width:120, sort: true}
+      ,{field:'act_rpy_amt', title: '本月实际还款金额', width: 120, sort: true}
+      ,{field:'lat_rpy_date', title: '最近实际还款日期', width: 120, sort: true}
+      ,{field:'acct_bal', title: '余额', width: 100, sort: true}
+      ,{field:'rem_rep_prd', title: '剩余还款期数', width: 120, sort: true}
+      ,{field:'five_cate', width:100, title: '五级分类', sort: true}
+      ,{field:'five_cate_adj_date', width:120, title: '五级分类认定日期', sort: true,hide:true}
+      ,{field:'rpy_status', width:140, title: '当前还款状态', sort: true}
+      ,{field:'overd_prd', width:140, title: '当前逾期期数', sort: true}
+      ,{field:'tot_overd', width:140, title: '当前逾期总额', sort: true}
+      ,{field:'overd_princ', width:140, title: '当前逾期本金', sort: true}
+      ,{field:'oved31_60princ', width:100, title: '逾期31-60', sort: true}
+      ,{field:'oved61_90princ', width:100, title: '逾期61-90', sort: true,hide:true}
+      ,{field:'oved91_180princ', width:100, title: '逾期91-180', sort: true,hide:true}
+      ,{field:'oved_princ180', width:100, title: '逾期180', sort: true,hide:true}
+      ,{field:'close_date', width:140, title: '账户关闭日期', sort: true}
+      ,{field:'report_status', wwidth:100, title: '报送状态',templet : function(d){
+            if(d.report_status == 0){
+            return '未报送';
+            }else if(d.report_status == 1){
+            return '报送成功';
+            }else if(d.report_status == 2){
+            return '报送失败';
+            }else{
+            return d.line_type;}
+        }}
+      ,{field:'report_date', width:100, title: '上报日期', sort: true}
+      ,{field:'create_time', width:100, title: '创建时间', sort: true,hide:true}
+      <!--,{fixed: 'right', width:100, align:'center', toolbar: '#barDemo'}//编辑栏样式-->
+    ]]
+  });
+
+  table.on('tool(demo2)', function(obj){ //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+  var data = obj.data; //获得当前行数据
+  var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+  var tr = obj.tr; //获得当前行 tr 的 DOM 对象（如果有的话）
+
+  if(layEvent === 'detail'){ //查看
+    //do somehing
+  } else if(layEvent === 'del'){ //删除
+    layer.confirm('真的删除行么', function(index){
+      obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+      layer.close(index);
+      //向服务端发送删除指令
+    });
+  } else if(layEvent === 'edit'){ //编辑
+    //do something
+    		<!--form.val("formTest",data);-->
+            layer.open({
+            type: 2,
+            title: '编辑',
+            fix: false,
+            maxmin: true,
+            shadeClose: true,
+            shade: 0.8,
+            area: ['800px' , '520px'],
+            content: '/loan/info/edit',
+            success: function(layero, index){
+            var body = layer.getChildFrame('body', index);
+            layer.iframeAuto(index);
+            body.find('#id').val(data.id)
+			body.find('#loan_time').val(data.loan_time)
+			body.find('#loan_money').val(data.loan_money)
+			body.find('#loan_expired').val(data.loan_expired)
+			body.find('#clear_time').val(data.clear_time )
+			body.find('#stages_num').val(data.stages_num)
+			body.find('#create_time').val(data.create_time)
+            },
+            <!--end: function () {-->
+               <!--location.reload();-->
+            <!--}-->
+        });
+
+    //同步更新缓存对应的值
+    <!--obj.update({-->
+      <!--username: '123'-->
+      <!--,title: 'xxx'-->
+    <!--});-->
+  } else if(layEvent === 'LAYTABLE_TIPS'){
+    layer.alert('Hi，头部工具栏扩展的右侧图标。');
+  }
+});
+form.on('submit(provinceSearch)', function(data){
+	var formData = data.field;
+	console.log(formData);
+	var user_id = formData.user_id,
+		acct_no = formData.acct_no;
+	table.reload('provinceReload', {
+		page: {
+			curr: 1
+		},
+		where:{
+		userId:user_id,
+		acctNo:acct_no
+		},
+		method: 'post',
+		contentType: "application/json;charset=utf-8",
+		<!--url: '/data/'-->
+	});
+	return false;
+});
+});
+
+</script>
+
+</body>
+</html>

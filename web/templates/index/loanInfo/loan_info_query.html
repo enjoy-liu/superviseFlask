@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>借款信息</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../static/admin/layui/css/layui.css" media="all">
+    <!-- 注意：本地文件路径 -->
+	<style>
+		.layui-table-cell {
+    	   height:36px;
+    	   line-height: 36px;
+		}
+	</style>
+</head>
+<body>
+	<blockquote class="layui-elem-quote news_search">
+		<div class="layui-row">
+			<form class="layui-form layui-col-md12 x-so" id="complain_search">
+				用户ID:
+				<div class="layui-input-inline">
+					<input type="text" name="user_id" id="user_id"
+						placeholder="请输入用户ID" autocomplete="off" class="layui-input">
+				</div>
+				借款编号:
+				<div class="layui-input-inline">
+					<input type="text" name="loan_order_no" id="loan_order_no"
+						placeholder="请输入借款编号" autocomplete="off" class="layui-input">
+				</div>
+				<button id="search" class="layui-btn" lay-submit
+					lay-filter="provinceSearch">
+					<i class="layui-icon">&#xe615;</i>
+				</button>
+			</form>
+		</div>
+
+	</blockquote>
+<table class="layui-hide" id="test" lay-filter="demo2" ></table>
+
+
+<script src="../../static/admin/layui/layui.js" charset="utf-8"></script>
+
+<!-- 注意：本地文件路径 -->
+<script type="text/html" id="barDemo" >
+
+  <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <!--<a class="layui-btn layui-btn-xs" lay-event="detail">查看</a>-->
+  <!--<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>-->
+</script>
+
+<script>
+layui.use(['table','layer','form','laypage'], function(){
+	var table = layui.table,
+  		layer = layui.layer,
+  		form = layui.form,
+  		$ = layui.jquery,
+  		laypage = layui.laypage;
+
+  table.render({
+  	id:"provinceReload"
+    ,elem: '#test'
+    ,url:'/loan/info'       // 数据接口，后续讲解
+    ,cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+    ,height : 'full-100'
+    <!--,done:function (){-->
+    <!--$(".laytable-cell-1-0-10").css("width","100px");-->
+    <!--}-->
+    ,page: true
+    ,limit: 10
+    ,method:'post'
+    ,contentType: "application/json;charset=utf-8"
+	,request:{
+  		pageName: 'page',
+  		limitName: 'limit'
+  	}
+    ,cols: [[
+      {field:'id',title: 'ID', hide:true}
+      ,{field:'user_id', width:120, title: '用户ID', sort: true}
+      ,{field:'user_name', width:200, title: '用户名'}
+      ,{field:'user_type', width:120, title: '用户类型', sort: true ,templet : function (d){
+            if(d.user_type == 1){
+            return '个人';
+            }else if(d.user_type == 2){
+            return '企业';
+            }else if(d.user_type == 3){
+            return '企业法人';
+            }else{
+            return d.user_type;}
+      }}
+      ,{field:'line_type', width:80, title: '业务线',templet : function(d){
+            if(d.line_type == 0){
+            return '联名卡';
+            }else if(d.line_type == 4){
+            return '车友贷';
+            }else if(d.line_type == 10){
+            return '好运贷';
+            }else{
+            return d.line_type;}
+      }}
+      ,{field:'loan_order_no', title: '借款编号', width: 220, sort: true} //minWidth：局部定义当前单元格的最小宽度，layui 2.2.1 新增
+      ,{field:'loan_money', title: '借款金额', width: 120, sort: true}
+      ,{field:'loan_time', title: '借款时间', width: 120, sort: true}
+      ,{field:'loan_expired', title: '借款到期时间', width: 140, sort: true}
+      ,{field:'stages_num', width:90, title: '期数', sort: true}
+      ,{field:'clear_time', width:120, title: '结清时间', sort: true}
+      ,{field:'create_time', width:120, title: '创建时间', sort: true}
+      ,{fixed: 'right', width:100, align:'center', toolbar: '#barDemo'}//编辑栏样式
+    ]]
+  });
+
+  table.on('tool(demo2)', function(obj){ //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+  var data = obj.data; //获得当前行数据
+  var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+  var tr = obj.tr; //获得当前行 tr 的 DOM 对象（如果有的话）
+
+  if(layEvent === 'detail'){ //查看
+    //do somehing
+  } else if(layEvent === 'del'){ //删除
+    layer.confirm('真的删除行么', function(index){
+      obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+      layer.close(index);
+      //向服务端发送删除指令
+    });
+  } else if(layEvent === 'edit'){ //编辑
+    //do something
+    		<!--form.val("formTest",data);-->
+            layer.open({
+            type: 2,
+            title: '编辑',
+            fix: false,
+            maxmin: true,
+            shadeClose: true,
+            shade: 0.8,
+            area: ['800px' , '520px'],
+            content: '/loan/info/edit',
+            success: function(layero, index){
+            var body = layer.getChildFrame('body', index);
+            layer.iframeAuto(index);
+            body.find('#id').val(data.id)
+			body.find('#loan_time').val(data.loan_time)
+			body.find('#loan_money').val(data.loan_money)
+			body.find('#loan_expired').val(data.loan_expired)
+			body.find('#clear_time').val(data.clear_time )
+			body.find('#stages_num').val(data.stages_num)
+			body.find('#create_time').val(data.create_time)
+            },
+            end: function () {
+               $(".layui-laypage-btn")[0].click();
+            }
+        });
+
+    //同步更新缓存对应的值
+    <!--obj.update({-->
+      <!--username: '123'-->
+      <!--,title: 'xxx'-->
+    <!--});-->
+  } else if(layEvent === 'LAYTABLE_TIPS'){
+    layer.alert('Hi，头部工具栏扩展的右侧图标。');
+  }
+});
+form.on('submit(provinceSearch)', function(data){
+	var formData = data.field;
+	console.log(formData);
+	var user_id = formData.user_id,
+		loan_order_no = formData.loan_order_no;
+	table.reload('provinceReload', {
+		page: {
+			curr: 1
+		},
+		where:{
+		userId:user_id,
+		loanOrderNo:loan_order_no
+		},
+		method: 'post',
+		contentType: "application/json;charset=utf-8",
+		<!--url: '/data/'-->
+	});
+	return false;
+});
+});
+
+</script>
+
+</body>
+</html>

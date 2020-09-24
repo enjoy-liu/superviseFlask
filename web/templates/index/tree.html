@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+ 
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+ 
+    @*这里引入Layui Css资源(注意资源路径)*@
+    <link href="../../static/admin/layui/css/layui.css" rel="stylesheet" />
+</head>
+<body>
+    <div>
+ 
+ 
+        @*搜索层*@
+        <div class="demoTable">
+            按模板名称搜索：
+            <div class="layui-inline">
+                <input class="layui-input" id="demoReload" autocomplete="off">
+            </div>
+            <button class="layui-btn" data-type="reload">搜索</button>
+        </div>
+ 
+ 
+ 
+        @*Table表格层*@
+        @*创建一个table实例   在页面放置一个元素 <table id="test"></table>，然后通过 table.render() 方法指定该容器,
+        这里使用的是表格自动渲染     参数:Url:数据接口路径;Page:是否开启分页;id:表格唯一标示*@
+        <table class="layui-table" lay-data="{width:700, url:'/Home/Get_Data', page:true, id:'test'}" lay-filter="test">
+            <thead>
+                <tr>
+                    <th lay-data="{field:'UserId', width:80, sort: true}">ID</th>@*数据字段名称*@
+                    <th lay-data="{field:'UserName', width:80}">用户名</th>
+                    <th lay-data="{field:'UserAge', width:80, sort: true}">年龄</th>
+                    <th lay-data="{field:'UserSex'}">性别</th>
+                    <th lay-data="{fixed: 'right', toolbar: '#barDemo', width:250, align:'center'}">操作</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+ 
+ 
+    @*工具栏  在Table中使用 toolbar声明一个 Id  放置在任意位置皆可*@
+    <script type="text/html" id="barDemo">
+        <a class="layui-btn layui-btn-xs" lay-event="detail">编辑</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </script>
+ 
+ 
+ 
+    <script src="~/Scripts/jquery-1.10.2.js"></script>@*引入jquery*@
+    <script src="~/Content/layui/layui.js"></script>@*/引入Layui的js*@
+    <script>
+        //创建实例  要想数据初始化 这里必须要写
+        layui.use(['table', 'layer', 'form'], function ()
+        {
+            var table = layui.table;
+            layer = layui.layer;
+            form = layui.form;
+ 
+ 
+            //搜索 ----------------------------------------------- Begin-----------------------------------------------------------
+            var $ = layui.$, active =
+              {
+                  reload: function () {
+                      var demoReload = $('#demoReload').val();//获取输入框的值
+                      //执行重载
+                      table.reload('test',
+                          {
+                              page:
+                                  {
+                                      curr: 1 //重新从第 1 页开始
+                                  }
+                        , where: { name: demoReload}//这里传参  向后台
+                        , url: '/Home/Temp_search'//后台做模糊搜索接口路径
+                        , method: 'post'
+                          });
+                  }
+              };
+            //这个是用于创建点击事件的实例
+            $('.demoTable .layui-btn').on('click', function ()
+            {
+                var type = $(this).data('type');
+                active[type] ? active[type].call(this) : '';
+            });
+            //搜索 ----------------------------------------------- End-----------------------------------------------------------
+ 
+ 
+ 
+ 
+ 
+ 
+            //监听工具条 ----------------------------------------------- Begin-----------------------------------------------------------
+            table.on('tool(test)', function (obj) {    //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+                var data = obj.data; //获得当前行数据
+                var layEvent = obj.event; //获得 lay-event 对应的值（也可以是表头的 event 参数对应的值）
+                var tr = obj.tr; //获得当前行 tr 的DOM对象
+                if (layEvent == 'detail')
+                {
+                    layer.open(
+                      {
+                          type: 2,
+                          title: '编辑页面',
+                          skin: 'layui-layer-molv',
+                          shadeClose: false,
+                          shade: 0.8,
+                          area: ['880px', '550px'],
+                          content: 'Url',//跳转的页面
+                          cancel: function (index)
+                          {
+                              $(".layui-laypage-btn").click();//这里用于关闭Open时触发回调函数  刷新父页面数据  一定要引入Jquery
+                          }
+ 
+                      });
+                    //注：在这里我不就做修改界面了  这里这只是一个弹出框  弹出你的修改页面  Content中你自定义自己的页面路径并传参数
+                } else//删除数据
+                {
+                    //删除数据在这里可以使用Ajax异步  就和平常使用一样简单
+                    $.post("/Home/DeleteInfoById", { id: data.UserId }, function (ret)
+                    {
+                        if (ret.code == "1") {
+                            layer.msg(ret.msg, { icon: 1, time: 1500 }, function () {
+                                obj.del(); //删除对应行（tr）的DOM结构，并更新缓存
+                                $(".layui-laypage-btn").click();
+                            });
+                        } else
+                        {
+                            layer.msg(ret.msg, { icon: 2, time: 1500 });
+                        }
+                    });
+ 
+                }
+            });
+ 
+            //监听工具条 ----------------------------------------------- ENd-----------------------------------------------------------
+        });
+    </script>
+</body>
+</html>
